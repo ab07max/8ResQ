@@ -36,6 +36,11 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         holder.mIdView.setText("Quantity: " + Integer.toString(mValues.get(position).getQuantity()));
         holder.mContentView.setText(mValues.get(position).getTitle());
         holder.mDescView.setText(mValues.get(position).getDescription());
+
+        if(mValues.get(position).isCompleted())
+            holder.mIsCompleted.setText("Done:Yes");
+        else
+            holder.mIsCompleted.setText("Done:No");
     }
 
     @Override
@@ -48,6 +53,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         public final TextView mIdView;
         public final TextView mContentView;
         public final TextView mDescView;
+        public final TextView mIsCompleted;
         public Requests mItem;
 
         public ViewHolder(View view) {
@@ -56,6 +62,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
             mIdView = (TextView) view.findViewById(R.id.item_number);
             mContentView = (TextView) view.findViewById(R.id.content);
             mDescView = (TextView) view.findViewById(R.id.item_description);
+            mIsCompleted = (TextView) view.findViewById(R.id.item_completed);
         }
 
         @Override
