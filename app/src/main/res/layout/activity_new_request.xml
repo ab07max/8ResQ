@@ -47,7 +47,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="5dp"
-                android:text="Request for:" />
+                android:fontFamily="@font/bevan"
+                android:text="Request for:"
+                android:textColor="@color/colorPrimary" />
 
             <EditText
                 android:id="@+id/requestTitle"
@@ -56,6 +58,7 @@
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
+                android:backgroundTint="@color/colorPrimary"
                 android:ems="10"
                 android:inputType="textPersonName" />
         </LinearLayout>
@@ -78,8 +81,10 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="5dp"
+                android:fontFamily="@font/bevan"
                 android:text="Description:"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimary" />
 
             <EditText
                 android:id="@+id/requestDescription"
@@ -88,6 +93,7 @@
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
+                android:backgroundTint="@color/colorPrimary"
                 android:ems="10"
                 android:gravity="start|top"
                 android:inputType="textMultiLine" />
@@ -111,7 +117,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
-                android:text="Quantity:" />
+                android:fontFamily="@font/bevan"
+                android:text="Quantity:"
+                android:textColor="@color/colorPrimary" />
 
             <EditText
                 android:id="@+id/requestQuantity"
@@ -119,6 +127,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
+                android:backgroundTint="@color/colorPrimary"
                 android:inputType="number" />
         </LinearLayout>
 
@@ -127,6 +136,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:backgroundTint="@color/colorPrimary"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -140,7 +150,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
-                android:text="Priority:" />
+                android:fontFamily="@font/bevan"
+                android:text="Priority:"
+                android:textColor="@color/colorPrimary" />
 
             <Spinner
                 android:id="@+id/priority_spinner"
@@ -149,7 +161,9 @@
                 android:layout_margin="5dp"
                 android:layout_marginLeft="@dimen/text_margin"
                 android:layout_marginRight="@dimen/text_margin"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:background="@color/colorPrimary"
+                android:backgroundTint="@color/colorPrimary" />
         </LinearLayout>
 
         <LinearLayout
@@ -169,7 +183,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
-                android:text="Type:" />
+                android:fontFamily="@font/bevan"
+                android:text="Type:"
+                android:textColor="@color/colorPrimary" />
 
             <RadioGroup
                 android:layout_width="wrap_content"
@@ -180,19 +196,23 @@
                     android:id="@+id/radio_medication"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Medication" />
+                    android:shadowColor="@color/colorPrimary"
+                    android:text="Medication"
+                    android:textColor="@color/colorPrimary" />
 
                 <RadioButton
                     android:id="@+id/radio_food"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Food" />
+                    android:text="Food"
+                    android:textColor="@color/colorPrimary" />
 
                 <RadioButton
                     android:id="@+id/radio_ppe"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Personal Protection Kit" />
+                    android:text="Personal Protection Kit"
+                    android:textColor="@color/colorPrimary" />
             </RadioGroup>
         </LinearLayout>
 
@@ -200,7 +220,10 @@
             android:id="@+id/requestButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/bevan"
             android:text="Place Request"
+            android:textColor="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -213,7 +236,10 @@
             android:id="@+id/closeRequestButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="close Request."
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/bevan"
+            android:text="close Request"
+            android:textColor="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -238,8 +264,10 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="5dp"
+                android:fontFamily="@font/bevan"
                 android:text="Comments :"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimary" />
 
             <EditText
                 android:id="@+id/requestComments"
@@ -248,6 +276,7 @@
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
+                android:backgroundTint="@color/colorPrimary"
                 android:ems="10"
                 android:gravity="start|top"
                 android:inputType="textMultiLine" />

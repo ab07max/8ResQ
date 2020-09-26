@@ -93,8 +93,8 @@ public class login_activity extends AppCompatActivity {
             }
         });
 
-        username.setHint("Username(Email)");
-        password.setHint("Password");
+        username.setHint("Enter username/email");
+        password.setHint("Enter password");
         mAuth = FirebaseAuth.getInstance();
 
         login_button.setOnClickListener(new View.OnClickListener(){
