@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -120,6 +121,13 @@ public class login_activity extends AppCompatActivity {
 
 
     }
+
+    private void navigateTOQuestionActivity() {
+        Intent QuestionAcitivity = new Intent(getApplicationContext(), register_activity.class);
+        startActivity(QuestionAcitivity);
+        finish();
+    }
+
     protected void hideSoftKeyboard() {
         ((InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE))
                 .toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);

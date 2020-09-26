@@ -39,4 +39,5 @@
     <string name="request_add">Place your Request.</string>
     <string name="request_view">Edit Request</string>
     <string name="request_update">Update Request</string>
+    <string name="title_activity_splash">FullscreenActivity</string>
 </resources>
