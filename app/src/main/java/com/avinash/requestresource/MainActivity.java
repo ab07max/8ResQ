@@ -2,6 +2,7 @@ package com.avinash.requestresource;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -121,6 +122,10 @@ public class MainActivity extends AppCompatActivity {
         navUsername.setText("Hey User!");
         TextView navEmail = (TextView) headerView.findViewById(R.id.app_email);
         navEmail.setText(this.userEmail);
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+        String role = pref.getString("role","notadmin");
+        this.setUserRole(role);
     }
 
     @Override

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -14,6 +15,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.avinash.requestresource.databinding.ActivitySplashBinding;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -25,6 +29,8 @@ public class splashActivity extends AppCompatActivity {
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
      */
     private static final boolean AUTO_HIDE = true;
+
+
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
@@ -125,16 +131,72 @@ public class splashActivity extends AppCompatActivity {
         binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
-        SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean("isActive",false);
-        editor.apply();
+//        SharedPreferences.Editor editor = pref.edit();
+//        editor.putBoolean("isActive",true);
+//        editor.apply();
 
-        if(pref.getBoolean("isActive",true) == false){
-            Toast.makeText(getApplicationContext(), "returned false", Toast.LENGTH_LONG).show();
-            navigateTOQuestionActivity();
-        }else{
-            navigateTOLoginActivity();
-            Toast.makeText(getApplicationContext(), "returned true", Toast.LENGTH_LONG).show();
+
+
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/users";
+        OkHttpHandler okHttpHandler= new OkHttpHandler();
+        okHttpHandler.execute(url);
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Thread background = new Thread() {
+            public void run() {
+                try {
+                    // Thread will sleep for 5 seconds
+                    sleep(3*1000);
+
+                    // After 5 seconds redirect to another intent
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+                    if(pref.getBoolean("isActive",false) == false){
+                        Toast.makeText(getApplicationContext(), "returned false", Toast.LENGTH_LONG).show();
+                        navigateTOQuestionActivity();
+                    }else{
+                        navigateTOLoginActivity();
+                        Toast.makeText(getApplicationContext(), "returned true", Toast.LENGTH_LONG).show();
+                    }
+                    //Remove activity
+                    finish();
+                } catch (Exception e) {
+                }
+            }
+        };
+        // start thread
+        background.start();
+
+    }
+
+    public class OkHttpHandler extends AsyncTask {
+
+        OkHttpClient client = new OkHttpClient();
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            Toast.makeText(getApplicationContext(), "result: " + o.toString(), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            Request.Builder builder = new Request.Builder();
+            builder.url((String)objects[0]);
+            Request request = builder.build();
+
+            try {
+                Response response = client.newCall(request).execute();
+                return response.body().string();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 
