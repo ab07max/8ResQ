@@ -1,34 +1,29 @@
 package com.avinash.requestresource;
-
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import java.util.ArrayList;
-import java.util.HashMap;
-
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.IOException;
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -119,110 +114,56 @@ public class register_activity extends AppCompatActivity {
         });
     }
 
-    private void validateUserCrednetials(String username, String password) {
-        mAuth.signInWithEmailAndPassword(username, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "SignInWithEmail:success");
-                            user = mAuth.getCurrentUser();
-                            updateUI(user, "login");
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "SignInWithEmail:failure", task.getException());
-                            Toast.makeText(register_activity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-
-                    }
-                });
-    }
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private void createUserWithEmail(String username, String password){
-        mAuth.createUserWithEmailAndPassword(username, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "createUserWithEmail:success");
-                            user = mAuth.getCurrentUser();
-                            registerUserInUserDB(user.getUid(), "staff");
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/auth/register";
+        String postBody="{\n" +
+                "    \"email\": \""+ username +"\",\n" +
+                "    \"password\": \""+ password+"\"\n" +
+                "}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                updateUI(null, "login");
+//                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
 
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                            updateUI(null, "usercreation");
-                            EditText usernameEditText = (EditText) findViewById(R.id.register_activity_username);
-                            EditText passwordEditText = (EditText) findViewById(R.id.register_activity_password);
-                            EditText confirmPassword = (EditText) findViewById(R.id.register_activity_password2);
-                            passwordEditText.setText("");
-                            confirmPassword.setText("");
-                            nDialog.dismiss();
-                        }
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+                    String userid  = (String) json.getString("userid");
+                    String role = (String) json.getString("role");
+                    String name = (String) json.getString("username");
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+                    SharedPreferences.Editor editor = pref.edit();
 
-                    }
-                });
+                    editor.putString("role",role);
+                    editor.putString("userid",userid);
+                    editor.putString("name",name);
+                    editor.apply();
+
+                    updateUI(userid, "login");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    private void getUserDetails(final FirebaseUser user) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").whereEqualTo("userID", user.getUid()).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task< QuerySnapshot > task) {
-//                        nDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            ArrayList< Requests > requests = new ArrayList < Requests > ();
-                            for (QueryDocumentSnapshot document: task.getResult()) {
-                                MainActivity mainActivity = new MainActivity();
-                                mainActivity.setUserRole((String)document.get("role"));
-                            }
-                            updateUI(FirebaseAuth.getInstance().getCurrentUser(), "usercreation");
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
-                        nDialog.dismiss();
-                    }
-                });
-    }
 
-    private void registerUserInUserDB(String uid, String staff) {
-        HashMap<String,Object> userRecord = new HashMap<String, Object>();
-        userRecord.put("email", user.getEmail());
-        userRecord.put("displayName", user.getDisplayName());
-        userRecord.put("userID", user.getUid());
-        userRecord.put("role", "staff");
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users")
-                .add(userRecord)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-
-                        getUserDetails(user);
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        nDialog.dismiss();
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
-    }
-
-    private void updateUI(FirebaseUser user, String contextValue) {
+    private void updateUI(String user, String contextValue) {
         if (contextValue.equals("login")){
             if(user == null){
                 loginFailed();
             }else{
                 Intent mainActivity = new Intent(this, MainActivity.class);
                 startActivity(mainActivity);
+                finish();
             }
         }else if( contextValue.equals("usercreation")){
             if(user == null){
@@ -230,13 +171,13 @@ public class register_activity extends AppCompatActivity {
             }else{
                 Intent mainActivity = new Intent(this, MainActivity.class);
                 startActivity(mainActivity);
+                finish();
             }
         }
-
     }
 
     private void userCreationFailed() {
-        Toast.makeText(register_activity.this, "User reation failed. Try again.",
+        Toast.makeText(register_activity.this, "User creation failed. Try again.",
                 Toast.LENGTH_LONG).show();
     }
 
@@ -247,7 +188,7 @@ public class register_activity extends AppCompatActivity {
 
     public boolean validateUserEnteredData(String username, String password, String confirmPassword){
         if(username.replace(" ","").equals("") || password.replace(" ", "").equals("")){
-            Toast.makeText(getApplicationContext(),"Plese enter valid details!!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),"Please enter valid details!!", Toast.LENGTH_SHORT).show();
             return false;
         }else if(password.length() < 5){
             Toast.makeText(getApplicationContext(),"Password should be longer than 5 characters.!!", Toast.LENGTH_SHORT).show();
@@ -262,10 +203,6 @@ public class register_activity extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
         delayedHide(100);
     }
 

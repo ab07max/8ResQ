@@ -19,9 +19,17 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.avinash.requestresource.databinding.ActivitySplashBinding;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -110,6 +118,8 @@ public class splashActivity extends AppCompatActivity {
     };
     private ActivitySplashBinding binding;
 
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,20 +144,41 @@ public class splashActivity extends AppCompatActivity {
         // while interacting with the UI.
 
 
-        SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
-        SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean("isActive",false);
-        editor.apply();
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/users/active";
+        String postBody="{\n\"id\": \""+ getApplicationContext().getSharedPreferences("8ResQ",0).getString("userid", null) +"\"}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                System.out.println(request.body().toString());
+//                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+
+                    String userid  = (String) json.getString("id");
+                    boolean a = (boolean) json.getBoolean("isActive");
+
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+                    SharedPreferences.Editor editor = pref.edit();
 
 
-
-//        OkHttpClient client = new OkHttpClient();
-//        String url= "https://8resqservices.azurewebsites.net/users";
-//        OkHttpHandler okHttpHandler= new OkHttpHandler();
-//        okHttpHandler.execute(url);
-
-
+                    editor.putString("userid",userid);
+                    editor.putBoolean("isActive",a);
+                    editor.apply();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+//                Toast.makeText(getApplicationContext(),"Login success", Toast.LENGTH_LONG).show();
+            }
+        });
     }
+
 
     @Override
     protected void onResume() {
@@ -230,6 +261,7 @@ public class splashActivity extends AppCompatActivity {
     private void navigateTOQuestionActivity() {
         Intent QuestionActivity = new Intent(getApplicationContext(), question_one.class);
         startActivity(QuestionActivity);
+        finish();
     }
 
     @Override
