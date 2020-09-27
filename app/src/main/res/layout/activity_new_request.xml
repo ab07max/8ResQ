@@ -47,6 +47,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="5dp"
+                android:width="120dp"
                 android:fontFamily="@font/bevan"
                 android:text="Request for:"
                 android:textColor="@color/colorPrimary" />
@@ -71,7 +72,7 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linearLayout1">
 
@@ -80,10 +81,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
-                android:layout_marginLeft="5dp"
+                android:width="120dp"
                 android:fontFamily="@font/bevan"
                 android:text="Description:"
-                android:textAlignment="center"
+                android:textAlignment="inherit"
                 android:textColor="@color/colorPrimary" />
 
             <EditText
@@ -117,6 +118,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
+                android:width="115dp"
                 android:fontFamily="@font/bevan"
                 android:text="Quantity:"
                 android:textColor="@color/colorPrimary" />
@@ -125,7 +127,8 @@
                 android:id="@+id/requestQuantity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/colorPrimary"
                 android:inputType="number" />
@@ -136,7 +139,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:backgroundTint="@color/colorPrimary"
+            android:background="@color/colorPrimary"
+            android:backgroundTint="@color/white"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -150,19 +154,19 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
+                android:width="125dp"
                 android:fontFamily="@font/bevan"
                 android:text="Priority:"
                 android:textColor="@color/colorPrimary" />
 
             <Spinner
                 android:id="@+id/priority_spinner"
-                android:layout_width="wrap_content"
+                android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_marginLeft="@dimen/text_margin"
                 android:layout_marginRight="@dimen/text_margin"
                 android:layout_weight="1"
-                android:background="@color/colorPrimary"
                 android:backgroundTint="@color/colorPrimary" />
         </LinearLayout>
 
@@ -183,6 +187,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_weight="0.1"
+                android:width="120dp"
                 android:fontFamily="@font/bevan"
                 android:text="Type:"
                 android:textColor="@color/colorPrimary" />
@@ -264,9 +269,10 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
                 android:layout_marginLeft="5dp"
+                android:width="120dp"
                 android:fontFamily="@font/bevan"
                 android:text="Comments :"
-                android:textAlignment="center"
+                android:textAlignment="inherit"
                 android:textColor="@color/colorPrimary" />
 
             <EditText

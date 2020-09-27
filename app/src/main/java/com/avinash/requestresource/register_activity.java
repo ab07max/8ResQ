@@ -100,8 +100,8 @@ public class register_activity extends AppCompatActivity {
             }
         });
 
-        username.setHint("Username(Email)");
-        password.setHint("Password");
+        username.setHint("Enter username/e-mail");
+        password.setHint("Enter password");
         password1.setHint("Confirm Password");
         mAuth = FirebaseAuth.getInstance();
 
