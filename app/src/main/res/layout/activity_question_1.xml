@@ -49,12 +49,12 @@
         android:textColor="@color/colorPrimary"
         android:textSelectHandle="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/No"
+        app:layout_constraintEnd_toStartOf="@+id/no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView14" />
 
     <RadioButton
-        android:id="@+id/No"
+        android:id="@+id/no"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="80dp"

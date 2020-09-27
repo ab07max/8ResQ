@@ -12,6 +12,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.avinash.requestresource.databinding.ActivitySplashBinding;
@@ -114,7 +118,7 @@ public class splashActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         mVisible = true;
-        mControlsView = binding.fullscreenContentControls;
+
         mContentView = binding.fullscreenContent;
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -128,19 +132,19 @@ public class splashActivity extends AppCompatActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
+
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
         SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean("isActive",true);
+        editor.putBoolean("isActive",false);
         editor.apply();
 
 
 
-        OkHttpClient client = new OkHttpClient();
-        String url= "https://8resqservices.azurewebsites.net/users";
-        OkHttpHandler okHttpHandler= new OkHttpHandler();
-        okHttpHandler.execute(url);
+//        OkHttpClient client = new OkHttpClient();
+//        String url= "https://8resqservices.azurewebsites.net/users";
+//        OkHttpHandler okHttpHandler= new OkHttpHandler();
+//        okHttpHandler.execute(url);
 
 
     }
@@ -153,9 +157,26 @@ public class splashActivity extends AppCompatActivity {
                 try {
                     // Thread will sleep for 5 seconds
                     sleep(3*1000);
+                    RotateAnimation anim = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    anim.setInterpolator(new LinearInterpolator());
+                    anim.setRepeatCount(1);
+                    anim.setDuration(3000);
 
+// Start animating the image
+                    final ImageView splash = (ImageView) findViewById(R.id.fullscreenContent);
+                    splash.startAnimation(anim);
+
+// Later.. stop the animation
+                    sleep(3*1000);
+                    splash.setAnimation(null);
+                    sleep(1*1000);
                     // After 5 seconds redirect to another intent
                     SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+                    SharedPreferences.Editor editor = pref.edit();
+                    editor.putInt("count", 0);
+                    editor.apply();
+
+                    pref.getInt("count",0);
                     if(pref.getBoolean("isActive",true) == false){
 //                        Toast.makeText(getApplicationContext(), "returned false", Toast.LENGTH_LONG).show();
                         navigateTOQuestionActivity();
@@ -174,31 +195,31 @@ public class splashActivity extends AppCompatActivity {
 
     }
 
-    public class OkHttpHandler extends AsyncTask {
-
-        OkHttpClient client = new OkHttpClient();
-
-        @Override
-        protected void onPostExecute(Object o) {
-            super.onPostExecute(o);
-            Toast.makeText(getApplicationContext(), "result: " + o.toString(), Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        protected Object doInBackground(Object[] objects) {
-            Request.Builder builder = new Request.Builder();
-            builder.url((String)objects[0]);
-            Request request = builder.build();
-
-            try {
-                Response response = client.newCall(request).execute();
-                return response.body().string();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
+//    public class OkHttpHandler extends AsyncTask {
+//
+//        OkHttpClient client = new OkHttpClient();
+//
+//        @Override
+//        protected void onPostExecute(Object o) {
+//            super.onPostExecute(o);
+//            Toast.makeText(getApplicationContext(), "result: " + o.toString(), Toast.LENGTH_LONG).show();
+//        }
+//
+//        @Override
+//        protected Object doInBackground(Object[] objects) {
+//            Request.Builder builder = new Request.Builder();
+//            builder.url((String)objects[0]);
+//            Request request = builder.build();
+//
+//            try {
+//                Response response = client.newCall(request).execute();
+//                return response.body().string();
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//            return null;
+//        }
+//    }
 
     private void navigateTOLoginActivity() {
         Intent login = new Intent(getApplicationContext(), login_activity.class);
@@ -207,7 +228,7 @@ public class splashActivity extends AppCompatActivity {
     }
 
     private void navigateTOQuestionActivity() {
-        Intent QuestionActivity = new Intent(getApplicationContext(), register_activity.class);
+        Intent QuestionActivity = new Intent(getApplicationContext(), question_one.class);
         startActivity(QuestionActivity);
     }
 
@@ -235,7 +256,7 @@ public class splashActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        mControlsView.setVisibility(View.GONE);
+
         mVisible = false;
 
         // Schedule a runnable to remove the status and navigation bar after a delay
