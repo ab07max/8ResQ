@@ -209,6 +209,7 @@ public class splashActivity extends AppCompatActivity {
     private void navigateTOQuestionActivity() {
         Intent QuestionActivity = new Intent(getApplicationContext(), register_activity.class);
         startActivity(QuestionActivity);
+        finish();
     }
 
     @Override

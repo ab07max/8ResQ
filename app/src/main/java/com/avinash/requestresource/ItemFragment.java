@@ -23,6 +23,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -179,87 +191,128 @@ public class ItemFragment extends Fragment {
 
         }
     }
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     public void getQueryResults() {
-        nDialog.show();
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("requests")
-                .whereEqualTo("userID", currentUser.getUid()).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task< QuerySnapshot > task) {
-                        nDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            ArrayList < Requests > requests = new ArrayList < Requests > ();
-                            for (QueryDocumentSnapshot document: task.getResult()) {
-                                Requests request = new Requests();
-                                request.setQuantity(Integer.parseInt((document.get("quantity").toString())));
-                                request.setCompleted(Boolean.parseBoolean(document.get("completed").toString()));
-                                request.setTitle(document.get("title").toString());
-                                request.setDescription(document.get("description").toString());
-                                request.setUserID(document.get("userID").toString());
-                                request.setPriority(document.get("priority").toString());
-                                request.setComments(document.get("comments").toString());
-                                request.setType(document.get("type").toString());
-                                request.setRequestID(document.getId().toString());
-                                requests.add(request);
-                                allRequests  = requests;
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                            recyclerView.setAdapter(new MyItemRecyclerViewAdapter(requests));
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
+//        nDialog.show();
+        String url = "https://8resqservices.azurewebsites.net/userRequest/getRequestsForUser";
+        boolean loaded= true;
+        OkHttpClient client = new OkHttpClient();
+        String postBody="{\n" + "\"userId\": \""+ getActivity().getApplicationContext().getSharedPreferences("8ResQ",0).getString("userid",null) +"\"\n}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Toast.makeText(getActivity().getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    ArrayList<Requests> requests = new ArrayList<Requests>();
+                    JSONArray jsonarray = new JSONArray(response.body().string());
+                    for(int index= 0; index < jsonarray.length(); index++){
+                        JSONObject json = jsonarray.getJSONObject(index);
+                        Requests request = new Requests();
+//                        request.setAddressedBy(json.getString("addressedBy").toString());
+                        request.setComments(json.getString("comments").toString());
+                        request.setCompleted(json.getBoolean("completed"));
+                        request.setDescription(json.getString("description"));
+                        request.setUserID(json.getString("userId"));
+                        request.setPriority(json.getString("priority"));
+                        request.setQuantity(json.getInt("quantity"));
+                        request.setTitle(json.getString("title"));
+                        request.setType(json.getString("type"));
+                        request.setRequestID(json.getString("id"));
+                        requests.add(request);
                     }
-                });
+                    allRequests = requests;
+                    getActivity().runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            recyclerView.setAdapter(new MyItemRecyclerViewAdapter(allRequests));
+
+                        }
+                    });
+
+//                    nDialog.dismiss();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        recyclerView.setAdapter(new MyItemRecyclerViewAdapter(allRequests));
     }
 
     @Override
     public void onResume() {
         super.onResume();
         MainActivity mainActivity = (MainActivity) getActivity();
-        if(mainActivity.getUserRole().equals("staff")) {
+        if(mainActivity.getUserRole().equals("patient")) {
             getQueryResults();
         }else{
             getQueryResultsForAdmin();
         }
         mainActivity.hideFABbuttons();
+
     }
 
     private void getQueryResultsForAdmin() {
-        nDialog.show();
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("requests")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task< QuerySnapshot > task) {
-                        nDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            ArrayList < Requests > requests = new ArrayList < Requests > ();
-                            for (QueryDocumentSnapshot document: task.getResult()) {
-                                Requests request = new Requests();
-                                request.setQuantity((Integer.parseInt(document.get("quantity").toString())));
-                                request.setCompleted(Boolean.parseBoolean(document.get("completed").toString()));
-                                request.setTitle(document.get("title").toString());
-                                request.setDescription(document.get("description").toString());
-                                request.setUserID(document.get("userID").toString());
-                                request.setPriority(document.get("priority").toString());
-                                request.setComments(document.get("comments").toString());
-                                request.setType(document.get("type").toString());
-                                request.setRequestID(document.getId().toString());
-                                requests.add(request);
-                                allRequests = requests;
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                            recyclerView.setAdapter(new MyItemRecyclerViewAdapter(requests));
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
+//        nDialog.show();
+        String url = "https://8resqservices.azurewebsites.net/userRequest/getRequestsForUser";
+
+        OkHttpClient client = new OkHttpClient();
+        String postBody="{\n" + "\"userId\": \"\"\n}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Toast.makeText(getActivity().getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    ArrayList<Requests> requests = new ArrayList<Requests>();
+                    JSONArray jsonarray = new JSONArray(response.body().string());
+                    for(int index= 0; index < jsonarray.length(); index++){
+                        JSONObject json = jsonarray.getJSONObject(index);
+                        Requests request = new Requests();
+                        request.setAddressedBy(json.getString("addressedBy"));
+                        request.setComments(json.getString("comments"));
+                        request.setCompleted(json.getBoolean("completed"));
+                        request.setDescription(json.getString("description"));
+                        request.setUserID(json.getString("userId"));
+                        request.setPriority(json.getString("priority"));
+                        request.setQuantity(json.getInt("quantity"));
+                        request.setTitle(json.getString("title"));
+                        request.setType(json.getString("type"));
+                        request.setRequestID(json.getString("id"));
+                        requests.add(request);
                     }
-                });
+                    allRequests = requests;
+                    getActivity().runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            recyclerView.setAdapter(new MyItemRecyclerViewAdapter(allRequests));
+
+                        }
+                    });
+//                    nDialog.dismiss();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
     }
 
 }

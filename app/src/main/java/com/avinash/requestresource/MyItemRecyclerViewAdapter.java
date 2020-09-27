@@ -45,6 +45,8 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 
     @Override
     public int getItemCount() {
+        if( mValues == null)
+            return 0;
         return mValues.size();
     }
 

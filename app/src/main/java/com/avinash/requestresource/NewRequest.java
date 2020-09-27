@@ -2,6 +2,7 @@ package com.avinash.requestresource;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.Toast;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
@@ -18,6 +21,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,44 +53,35 @@ public class NewRequest extends AppCompatActivity {
     RadioButton radio_food, radio_medication, radio_ppe;
     Button completeRequestButton;
 
-
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private void insertOneRequest() {
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map< String, Object > request = new HashMap< >();
-        request.put("quantity", Integer.parseInt(quantity.getText().toString()));
-        request.put("requestedOn", "");
-        request.put("completed", "false");
-        request.put("userID", user.getUid());
-        request.put("title", requestTitle.getText().toString());
-        request.put("description", requestDescription.getText().toString());
-        request.put("priority", priority.getSelectedItemId());
-        request.put("addressedBy", "");
-        request.put("comments",requestComments.getText().toString());
+        String type = "";
         if(radio_food.isChecked())
-            request.put("type", "radio_food");
+            type = "radio_food";
         else if(radio_medication.isChecked())
-            request.put("type","radio_medication");
+            type = "radio_medication";
         else
-            request.put("type","radio_ppe");
+            type = "radio_ppe";
 
-        db.collection("requests")
-                .add(request)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(mainActivity);
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
+        String userId = getSharedPreferences("8ResQ",0).getString("userid", "");
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/userRequest/raise";
+        String postBody="{\"addressedBy\":\"\" ,\"comments\": \""+requestComments.getText()+"\",\"completed\": \"false\",\"description\": \""+requestDescription.getText()+"\",\"priority\": \""+ priority.getSelectedItemId() +"\",\"quantity\": \"" + quantity.getText() + "\", \"requestedOn\": \"\",\"title\": \""+ requestTitle.getText()+ " \",\"type\": \""+type+"\",\"userId\": \""+userId+"\" }";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Log.w(TAG, "Error adding document", e);
+                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(mainActivity);
+            }
+        });
     }
 
     @Override
@@ -166,83 +172,132 @@ public class NewRequest extends AppCompatActivity {
     }
 
     private void closeOneRequest() {
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map< String, Object > request = new HashMap< >();
-        request.put("quantity", Integer.parseInt(quantity.getText().toString()));
-        request.put("requestedOn", "");
-        request.put("completed", "true");
-        request.put("userID",getIntent().getStringExtra("userID"));
-        request.put("title", requestTitle.getText().toString());
-        request.put("description", requestDescription.getText().toString());
-        request.put("priority", priority.getSelectedItemId());
-        request.put("addressedBy", FirebaseAuth.getInstance().getCurrentUser().getEmail().toString());
-        request.put("comments",requestComments.getText().toString());
-        if(radio_food.isChecked())
-            request.put("type", "radio_food");
-        else if(radio_medication.isChecked())
-            request.put("type","radio_medication");
-        else
-            request.put("type","radio_ppe");
+        String url = "https://8resqservices.azurewebsites.net/userRequest/closeRequest";
 
-        db.collection("requests")
-                .document(getIntent().getStringExtra("requestID"))
-                .update(request).addOnSuccessListener(new OnSuccessListener<Void>() {
+        OkHttpClient client = new OkHttpClient();
+        String postBody="{\n" + "\"id\": \""+getIntent().getExtras().get("requestID") +"\"\n}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(Void aVoid) {
-                Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(mainActivity);
-                finish();
-                Log.d(TAG, "DocumentSnapshot updated with ID: " + getIntent().getStringExtra("requestID"));
+            public void onFailure(Request request, IOException e) {
+                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+
             }
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                    Intent mainActivity = new Intent(getApplicationContext(),MainActivity.class);
+                    startActivity(mainActivity);
+            }
+        });
+
+//        mAuth = FirebaseAuth.getInstance();
+//        user = mAuth.getCurrentUser();
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        Map< String, Object > request = new HashMap< >();
+//        request.put("quantity", Integer.parseInt(quantity.getText().toString()));
+//        request.put("requestedOn", "");
+//        request.put("completed", "true");
+//        request.put("userID",getIntent().getStringExtra("userID"));
+//        request.put("title", requestTitle.getText().toString());
+//        request.put("description", requestDescription.getText().toString());
+//        request.put("priority", priority.getSelectedItemId());
+//        request.put("addressedBy", FirebaseAuth.getInstance().getCurrentUser().getEmail().toString());
+//        request.put("comments",requestComments.getText().toString());
+//        if(radio_food.isChecked())
+//            request.put("type", "radio_food");
+//        else if(radio_medication.isChecked())
+//            request.put("type","radio_medication");
+//        else
+//            request.put("type","radio_ppe");
+//
+//        db.collection("requests")
+//                .document(getIntent().getStringExtra("requestID"))
+//                .update(request).addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
+//                startActivity(mainActivity);
+//                finish();
+//                Log.d(TAG, "DocumentSnapshot updated with ID: " + getIntent().getStringExtra("requestID"));
+//            }
+//        })
+//                .addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//                        Log.w(TAG, "Error adding document", e);
+//                    }
+//                });
     }
 
 
     private void updateOneRequest() {
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map< String, Object > request = new HashMap< >();
-        request.put("quantity", Integer.parseInt(quantity.getText().toString()));
-        request.put("requestedOn", "");
-        request.put("completed", "false");
-        request.put("userID",getIntent().getStringExtra("userID"));
-        request.put("title", requestTitle.getText().toString());
-        request.put("description", requestDescription.getText().toString());
-        request.put("priority", priority.getSelectedItemId());
-        request.put("addressedBy", "");
-        request.put("comments",requestComments.getText().toString());
-        if(radio_food.isChecked())
-            request.put("type", "radio_food");
-        else if(radio_medication.isChecked())
-            request.put("type","radio_medication");
-        else
-            request.put("type","radio_ppe");
 
-        db.collection("requests")
-                .document(getIntent().getStringExtra("requestID"))
-                .update(request).addOnSuccessListener(new OnSuccessListener<Void>() {
+        String type = "";
+        if(radio_food.isChecked())
+            type = "radio_food";
+        else if(radio_medication.isChecked())
+            type = "radio_medication";
+        else
+            type = "radio_ppe";
+
+        String userId = getSharedPreferences("8ResQ",0).getString("userid", "");
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/userRequest/updateRequest";
+        String postBody="{\"id\":\""+getIntent().getStringExtra("requestID")+"\" ,\"addressedBy\":\"\" ,\"comments\": \""+requestComments.getText()+"\",\"completed\": \"false\",\"description\": \""+requestDescription.getText()+"\",\"priority\": \""+ priority.getSelectedItemId() +"\",\"quantity\": \"" + quantity.getText() + "\", \"requestedOn\": \"\",\"title\": \""+ requestTitle.getText()+ " \",\"type\": \""+type+"\",\"userId\": \""+userId+"\" }";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(Void aVoid) {
+            public void onFailure(Request request, IOException e) {
+                Log.w(TAG, "Error adding document", e);
+                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
                 Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(mainActivity);
-                Log.d(TAG, "DocumentSnapshot updated with ID: " + getIntent().getStringExtra("requestID"));
             }
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error adding document", e);
-                    }
-                });
+        });
+
+//        mAuth = FirebaseAuth.getInstance();
+//        user = mAuth.getCurrentUser();
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        Map< String, Object > request = new HashMap< >();
+//        request.put("quantity", Integer.parseInt(quantity.getText().toString()));
+//        request.put("requestedOn", "");
+//        request.put("completed", "false");
+//        request.put("userID",getIntent().getStringExtra("userID"));
+//        request.put("title", requestTitle.getText().toString());
+//        request.put("description", requestDescription.getText().toString());
+//        request.put("priority", priority.getSelectedItemId());
+//        request.put("addressedBy", "");
+//        request.put("comments",requestComments.getText().toString());
+//        if(radio_food.isChecked())
+//            request.put("type", "radio_food");
+//        else if(radio_medication.isChecked())
+//            request.put("type","radio_medication");
+//        else
+//            request.put("type","radio_ppe");
+//
+//        db.collection("requests")
+//                .document(getIntent().getStringExtra("requestID"))
+//                .update(request).addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
+//                startActivity(mainActivity);
+//                Log.d(TAG, "DocumentSnapshot updated with ID: " + getIntent().getStringExtra("requestID"));
+//            }
+//        })
+//                .addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//                        Log.w(TAG, "Error adding document", e);
+//                    }
+//                });
     }
 
     @Override

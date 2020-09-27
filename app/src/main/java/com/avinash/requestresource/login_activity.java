@@ -219,6 +219,8 @@ public class login_activity extends AppCompatActivity {
                     SharedPreferences.Editor editor = pref.edit();
 
                     editor.putString("role",role);
+                    editor.putString("userid",userid);
+                    editor.putString("name",name);
                     editor.apply();
 
                     updateUI(userid, "login");

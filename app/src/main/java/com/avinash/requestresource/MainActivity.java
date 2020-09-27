@@ -10,6 +10,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -19,6 +21,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -27,6 +36,12 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         setSupportActionBar(toolbar);
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
         FloatingActionButton fab = findViewById(R.id.fab);
 
         fabCall.setOnClickListener(new View.OnClickListener() {
@@ -148,34 +163,46 @@ public class MainActivity extends AppCompatActivity {
         getQueryResults();
     }
 
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public void getQueryResults() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("requests")
-                .whereEqualTo("userID", currentUser.getUid()).get()
-                .addOnCompleteListener(new OnCompleteListener < QuerySnapshot > () {
-                    @Override
-                    public void onComplete(@NonNull Task < QuerySnapshot > task) {
-                        if (task.isSuccessful()) {
-                            ArrayList < Requests > requests = new ArrayList < Requests > ();
-                            for (QueryDocumentSnapshot document: task.getResult()) {
-                                Requests request = new Requests();
-                                request.setQuantity(Integer.parseInt((document.get("quantity").toString())));
-                                request.setCompleted(Boolean.parseBoolean(document.get("completed").toString()));
-                                request.setTitle(document.get("title").toString());
-                                request.setDescription(document.get("description").toString());
-                                request.setUserID(document.get("userID").toString());
-                                request.setPriority(document.get("priority").toString());
-                                request.setComments(document.get("comments").toString());
-                                requests.add(request);
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                            updateUI(requests, "requestslist");
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
+        String url = "https://8resqservices.azurewebsites.net/userRequest/getRequestsForUser";
+        OkHttpClient client = new OkHttpClient();
+        String postBody="{\n" + "\"userId\": \""+ getSharedPreferences("8ResQ",0).getString("userid",null) +"\"\n}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                updateUI(null, "requestslistFailed");
+                Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    ArrayList<Requests> requests = new ArrayList<Requests>();
+                    JSONArray jsonarray = new JSONArray(response.body().string());
+                    for(int index= 0; index < jsonarray.length(); index++){
+                        JSONObject json = jsonarray.getJSONObject(index);
+                        Requests request = new Requests();
+                        request.setAddressedBy(json.getString("addressedBy"));
+                        request.setComments(json.getString("comments"));
+                        request.setCompleted(json.getBoolean("completed"));
+                        request.setDescription(json.getString("description"));
+                        request.setUserID(json.getString("userId"));
+                        request.setPriority(json.getString("priority"));
+                        request.setQuantity(json.getInt("quantity"));
+                        request.setTitle(json.getString("title"));
+                        request.setType(json.getString("type"));
+                        request.setRequestID(json.getString("id"));
+                        requests.add(request);
                     }
-                });
+                    updateUI(requests, "requestslist");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void updateUI(ArrayList < Requests > requests, String UITag) {
