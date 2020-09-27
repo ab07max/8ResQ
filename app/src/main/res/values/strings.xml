@@ -39,5 +39,10 @@
     <string name="request_add">Place your Request.</string>
     <string name="request_view">Edit Request</string>
     <string name="request_update">Update Request</string>
-    <string name="title_activity_splash">FullscreenActivity</string>
+    <string name="title_activity_splash">8ResQ</string>
+    <string name="question1">Question1</string>
+    <string name="question2">Question2</string>
+    <string name="question3">Question3</string>
+    <string name="no_covid">Sounds like you are feeling ok. Stay Safe!</string>
+    <string name="need_test">Visit the nearest center and get tested</string>
 </resources>
