@@ -9,8 +9,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,6 +29,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -133,49 +147,92 @@ public class login_activity extends AppCompatActivity {
                 .toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
     }
 
+    public class OkHttpLoginHandler extends AsyncTask {
+
+        OkHttpClient client = new OkHttpClient();
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            boolean parseFailed = false;
+            try {
+                JSONObject json = new JSONObject((String)o);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                parseFailed = true;
+            }finally{
+                if(parseFailed == true){
+                    Toast.makeText(getApplicationContext(), "Login Failed", Toast.LENGTH_LONG).show();
+                }else{
+                    if(false){
+
+                    }else{
+                        Toast.makeText(login_activity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            Toast.makeText(getApplicationContext(), "result: " + o.toString(), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            Request.Builder builder = new Request.Builder();
+            builder.url((String)objects[0]);
+            Request request = builder.build();
+
+            try {
+                Response response = client.newCall(request).execute();
+                return response.body().string();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private void validateUserCrednetials(String username, String password) {
-        mAuth.signInWithEmailAndPassword(username, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "SignInWithEmail:success");
-                            user = mAuth.getCurrentUser();
-                            getUserDetails(user);
+        OkHttpClient client = new OkHttpClient();
+        String url= "https://8resqservices.azurewebsites.net/auth/login";
+        String postBody="{\n" +
+                "    \"email\": \""+ username +"\",\n" +
+                "    \"password\": \""+ password+"\"\n" +
+                "}";
+        RequestBody body = RequestBody.create(JSON, postBody);
+        Request request = new Request.Builder().url(url).post(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Request request, IOException e) {
+                    updateUI(null, "login");
+                    Toast.makeText(getApplicationContext(),"on failure", Toast.LENGTH_LONG).show();
+            }
 
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "SignInWithEmail:failure", task.getException());
-                            Toast.makeText(login_activity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+            @Override
+            public void onResponse(Response response) throws IOException {
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+                    String userid  = (String) json.getString("userid");
+                    String role = (String) json.getString("role");
+                    String name = (String) json.getString("username");
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
+                    SharedPreferences.Editor editor = pref.edit();
 
-                    }
-                });
+                    editor.putString("role",role);
+                    editor.apply();
+
+                    updateUI(userid, "login");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+//                Toast.makeText(getApplicationContext(),"Login success", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private void createUserWithEmail(String username, String password){
-        mAuth.createUserWithEmailAndPassword(username, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "createUserWithEmail:success");
-                            user = mAuth.getCurrentUser();
-                            updateUI(user, "usercreation");
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                            updateUI(null, "usercreation");
-                        }
 
-                    }
-                });
-    }
 
-    private void updateUI(FirebaseUser user, String contextValue) {
+    private void updateUI(String user, String contextValue) {
         if (contextValue.equals("login")){
             if(user == null){
                 loginFailed();
@@ -207,27 +264,27 @@ public class login_activity extends AppCompatActivity {
                 Toast.LENGTH_LONG).show();
     }
 
-    private void getUserDetails(final FirebaseUser user) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users").whereEqualTo("userID", user.getUid()).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task< QuerySnapshot > task) {
-                        nDialog.dismiss();
-                        if (task.isSuccessful()) {
-                            ArrayList< Requests > requests = new ArrayList < Requests > ();
-                            for (QueryDocumentSnapshot document: task.getResult()) {
-                                MainActivity mainActivity = new MainActivity();
-                                mainActivity.setUserRole((String)document.get("role"));
-                                mainActivity.setUserEmail((String)user.getEmail().toString());
-                            }
-                            updateUI(user, "login");
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
-                        }
-                    }
-                });
-    }
+//    private void getUserDetails(final FirebaseUser user) {
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        db.collection("users").whereEqualTo("userID", user.getUid()).get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task< QuerySnapshot > task) {
+//                        nDialog.dismiss();
+//                        if (task.isSuccessful()) {
+//                            ArrayList< Requests > requests = new ArrayList < Requests > ();
+//                            for (QueryDocumentSnapshot document: task.getResult()) {
+//                                MainActivity mainActivity = new MainActivity();
+//                                mainActivity.setUserRole((String)document.get("role"));
+//                                mainActivity.setUserEmail((String)user.getEmail().toString());
+//                            }
+//                            updateUI(user, "login");
+//                        } else {
+//                            Log.w(TAG, "Error getting documents.", task.getException());
+//                        }
+//                    }
+//                });
+//    }
 
     private void loginFailed() {
         Toast.makeText(this, "Login Failed. Please check your device internet connection.", Toast.LENGTH_LONG).show();
