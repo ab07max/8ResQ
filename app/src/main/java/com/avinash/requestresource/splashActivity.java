@@ -131,9 +131,9 @@ public class splashActivity extends AppCompatActivity {
         binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
-//        SharedPreferences.Editor editor = pref.edit();
-//        editor.putBoolean("isActive",true);
-//        editor.apply();
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean("isActive",true);
+        editor.apply();
 
 
 
@@ -156,12 +156,12 @@ public class splashActivity extends AppCompatActivity {
 
                     // After 5 seconds redirect to another intent
                     SharedPreferences pref = getApplicationContext().getSharedPreferences("8ResQ",0);
-                    if(pref.getBoolean("isActive",false) == false){
-                        Toast.makeText(getApplicationContext(), "returned false", Toast.LENGTH_LONG).show();
+                    if(pref.getBoolean("isActive",true) == false){
+//                        Toast.makeText(getApplicationContext(), "returned false", Toast.LENGTH_LONG).show();
                         navigateTOQuestionActivity();
                     }else{
                         navigateTOLoginActivity();
-                        Toast.makeText(getApplicationContext(), "returned true", Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getApplicationContext(), "returned true", Toast.LENGTH_LONG).show();
                     }
                     //Remove activity
                     finish();
